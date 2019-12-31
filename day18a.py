@@ -181,23 +181,32 @@ def cacheKey(loc, pastKeys):
 
 # return min distance to end or -1 for bad path
 def buildTree(root, lvl = 0):
-	global min, cache
+	global cache
 
 	node = root.node
 	#print 'ROOT', lvl, root.node.key, root.keys
 	if lvl == maxRecurs:
 		# reached the last key. 
-		if min > root.length:
-			print 'MIN = ', root.length
-			min = root.length
+		return root.length
+
+	plength = 100000000
 
 	for path in keyPaths[node.key]:
+		ckey = cacheKey(path.end.key, root.keys)
+		#if ckey in cache:
+		#	return cache[ckey]
+
 		if root.length + path.length < min: # is new path less than current min
 			if path.end.key not in root.keys: # have we already visited the path end on this run
 				if path.canDo(root.keys): # do we have keys for all doors on path
 					#print 'ADD CHILD', path.end.key
 					child = root.addChild(path.end, path.length) # create tree node 
-					buildTree(child, lvl + 1) # get distance from new node to end
+					length = buildTree(child, lvl + 1) # get distance from new node to end
+					if plength > length:
+						plength = length
+						cache[ckey] = length
+
+	return plength
 
 # read input
 f = open('input.txt', 'r')
@@ -245,6 +254,9 @@ if False:
 		keyPaths[k][0].output()
 
 root = Tree(startNode)
-buildTree(root)
+length = buildTree(root)
 
-print 'ANSWER', min
+print 'ANSWER', length
+for key in cache:
+	if cache[key] == 136:
+		print key
